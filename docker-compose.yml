@@ -1,0 +1,21 @@
+version: "3"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - "./run.py:/run.py"
+      - "./app:/app"
+    depends_on:
+      - database
+
+  database:
+    image: mongo
+    volumes:
+      - data-volume:/data/db
+
+volumes:
+  data-volume:
