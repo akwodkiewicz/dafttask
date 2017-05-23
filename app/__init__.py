@@ -16,10 +16,4 @@ mongo = PyMongo(app)
 from app import views, logic
 
 with app.app_context():
-    last_record = mongo.db['usd'].find().sort("effectiveDate",-1)[0]
-    last_date = datetime.strptime(last_record["effectiveDate"], "%Y-%m-%d").date()
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(logic.populate_db(last_date))
-    loop.close()
-
+    logic.restart_db()

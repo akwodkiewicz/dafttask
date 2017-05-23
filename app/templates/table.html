@@ -1,21 +1,46 @@
 {% extends "base.html" %}
+
+{% block navigation %}
+<li role="presentation"><a href="/">Home</a></li>
+<li role="presentation" class="active"><a href="/table">Table only</a></li>
+<li role="presentation"><a href="/graph">Graph only</a></li>
+<li role="presentation"><a href="/delete">Delete cache</a></li>
+{% endblock %}
+
+
 {% block content %}
-
-
+<div class="col-md-9">
+  <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
+  <h3>You can pick a link from the navigation bar or type in your data on the right</h3>
+</div>
+<div class="col-md-3">
+  <form role="form" method="POST">
+    <br/>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.currency) }}
+      {% if start is none %}
+      {{ render_field(form.from_date, placeholder='Start date') }}
+      {{ render_field(form.to_date, placeholder='End date') }}
+      {% else %}
+      {{ render_field(form.from_date, value=start) }}
+      {{ render_field(form.to_date, value=end) }}
+      {% endif %}
+      <button class="btn btn-default" type="submit">Submit</button>
+  </form>
+</div>
 <div class="row">
-    {% if data is not none %}
-    <div class="col-md-4 col-md-offset-4" id="table">
-      <table class="table table-striped" border="1">
-        <tr><th>Date</th><th>Rate</th></tr>
-        {% for row in data %}
-        <tr>
-          <td>{{ row['effectiveDate'] }}</td>
-          <td>{{ row['mid'] }}</td>
-        </tr>
-        {% endfor %}
+  {% if data is not none %}
+    <div class="col-md-6 col-offset-md-3" id="table">
+      <table class="table table-striped" style="margin-top: 100px" border="1">
+      <tr><th>Date</th><th>Rate</th></tr>
+      {% for row in data %}
+      <tr>
+        <td>{{ row['effectiveDate'] }}</td>
+        <td>{{ row['mid'] }}</td>
+      </tr>
+      {% endfor %}
       </table>
     </div>
     {% endif %}
 </div>
-
 {% endblock %}

@@ -2,7 +2,7 @@ import requests
 import asyncio
 import aiohttp
 import plotly as pl
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from sys import stderr
 
 from app import app, mongo
@@ -117,3 +117,14 @@ async def get_from_nbp(session, currency, start_date, end_date):
             if mongo.db[currency].find_one(rec) is None:
                 print(rec, file=stderr)
                 mongo.db[currency].insert_one(rec)
+
+def restart_db():
+    last_record_cursor = mongo.db['usd'].find().sort("effectiveDate",-1)
+    if last_record_cursor.count() != 0:
+        last_record = last_record_cursor[0]
+        last_date = datetime.strptime(last_record["effectiveDate"], "%Y-%m-%d").date()
+    else:
+        last_date = START_DATE
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(populate_db(last_date))
+    loop.close()
