@@ -1,4 +1,4 @@
-from flask import render_template, request
+from flask import render_template, request, Response
 from flask_pymongo import PyMongo
 from datetime import datetime, timedelta, date
 import requests
@@ -63,3 +63,12 @@ def graph():
 def delete():
     mongo.db['usd'].drop()
     return render_template('delete.html')
+
+@app.route('/mongo')
+def mongo_debug():
+    cursor = mongo.db['usd'].find()
+    file = ""
+    for doc in cursor:
+        file += str(doc)
+        file += '\n'
+    return Response(file, mimetype='text')
