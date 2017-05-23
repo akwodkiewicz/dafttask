@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>The DaftCode Internship Project</title>
+  </head>
+  <body>
+    <div>Navigation: <a href="/">Home</a>
+    <a href="/table">Table only</a>
+    <a href="/graph">Graph only</a>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    Cache deleted!
+    </div>
+  </body>
+</html>

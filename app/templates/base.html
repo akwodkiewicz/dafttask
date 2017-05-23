@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>The DaftCode Internship Project</title>
+  </head>
+  <body>
+    <div>Navigation: <a href="/">Home</a>
+    <a href="/table">Table only</a>
+    <a href="/graph">Graph only</a>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
+    <h2>You can pick a link from the navigation bar or check the history below</h2>
+    <form class="form" role="form" method="POST">
+    {{ form.hidden_tag() }}
+    {{ form.currency }}
+    {% if start is none %}
+    {{ form.from_date(placeholder='Start date') }}
+    {{ form.to_date(placeholder='End date') }}
+    {% else %}
+    {{ form.from_date(value=start) }}
+    {{ form.to_date(value=end) }}
+    {% endif %}
+    {{ form.submit }}
+    {% block content %}{% endblock %}
+    </form>
+  </body>
+</html>
