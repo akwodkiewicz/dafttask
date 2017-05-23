@@ -18,8 +18,10 @@ def index():
     end = date.today()
     form = CurrencyForm(request.form)
     if request.method == 'GET':
-        form.from_date.data = start.strftime("%Y-%m-%d")
-        form.to_date.data = end.strftime("%Y-%m-%d")
+        form.from_date.data = start
+        form.to_date.data = end
+        form.currency.data = 'usd'
+        (start, end, graph, data) = process(form)
     if request.method == 'POST':
         if form.validate():
             (start, end, graph, data) = process(form)
@@ -35,8 +37,10 @@ def table():
     end = date.today()
     form = CurrencyForm(request.form)
     if request.method == 'GET':
-        form.from_date.data = start.strftime("%Y-%m-%d")
-        form.to_date.data = end.strftime("%Y-%m-%d")
+        form.from_date.data = start
+        form.to_date.data = end
+        form.currency.data = 'usd'
+        (start, end, graph, data) = process(form)
     if request.method == 'POST':
         if form.validate():
             (start, end, graph, data) = process(form)
@@ -51,8 +55,10 @@ def graph():
     end = date.today()
     form = CurrencyForm(request.form)
     if request.method == 'GET':
-        form.from_date.data = start.strftime("%Y-%m-%d")
-        form.to_date.data = end.strftime("%Y-%m-%d")
+        form.from_date.data = start
+        form.to_date.data = end
+        form.currency.data = 'usd'
+        (start, end, graph, data) = process(form)
     if request.method == 'POST':
         if form.validate():
             (start, end, graph, data) = process(form)
@@ -75,4 +81,3 @@ def mongo_debug():
         file += str(doc)
         file += '\n'
     return Response(file, mimetype='text')
-    

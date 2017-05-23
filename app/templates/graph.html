@@ -28,11 +28,9 @@
       <button class="btn btn-default" type="submit">Submit</button>
   </form>
 </div>
-<div class="row">
-  <div class="col-md-6" id="graph">
-    {% if graph is not none %}
-    {{ graph|safe }}
-    {% endif %}
-  </div>
+<div class="col-md-12" id="graph">
+  {% if graph is not none %}
+  {{ graph|safe }}
+  {% endif %}
 </div>
 {% endblock %}

@@ -1,4 +1,4 @@
 #tablediv {
-	overflow: scroll;
+	overflow: auto;
 	height: 600px;
 }
