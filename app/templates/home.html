@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div id="container">
+<div class="row">
     {% if data is not none %}
-    <div id="table">
-      <table border="1">
+    <div class="col-md-6" id="table">
+      <table class="table table-striped" style="margin-top: 100px" border="1">
+      <tr><th>Date</th><th>Rate</th></tr>
       {% for row in data %}
       <tr>
         <td>{{ row['effectiveDate'] }}</td>
@@ -14,10 +15,10 @@
       </table>
     </div>
     {% endif %}
-    <div id="graph">
+    <div class="col-md-6" id="graph">
     {% if graph is not none %}
-	{{ graph|safe }}
-	{% endif %}
+	  {{ graph|safe }}
+  	{% endif %}
     </div>
 </div>
 

@@ -12,8 +12,6 @@ from .models import CurrencyForm, Record
 from .logic import make_graph, make_table, check_db, validate_dates, process
 
 
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     graph = None
@@ -25,7 +23,7 @@ def index():
         form.from_date.data = start.strftime("%Y-%m-%d")
         form.to_date.data = end.strftime("%Y-%m-%d")
     if request.method == 'POST':
-        if form.submit.data and form.validate():
+        if form.validate():
             (start, end, graph, data) = process(form)
     return render_template('home.html', form=form, graph=graph, data=data,
         start=start, end=end)
@@ -41,7 +39,7 @@ def table():
         form.from_date.data = start.strftime("%Y-%m-%d")
         form.to_date.data = end.strftime("%Y-%m-%d")
     if request.method == 'POST':
-        if form.submit.data and form.validate():
+        if form.validate():
             (start, end, graph, data) = process(form)
     return render_template('table.html', form=form, data=data, start=start, end=end)
 
@@ -56,7 +54,7 @@ def graph():
         form.from_date.data = start.strftime("%Y-%m-%d")
         form.to_date.data = end.strftime("%Y-%m-%d")
     if request.method == 'POST':
-        if form.submit.data and form.validate():
+        if form.validate():
             (start, end, graph, data) = process(form)
     return render_template('graph.html', form=form, graph=graph, start=start, end=end)
 

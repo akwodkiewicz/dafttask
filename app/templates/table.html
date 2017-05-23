@@ -2,16 +2,17 @@
 {% block content %}
 
 
-<div id="container">
+<div class="row">
     {% if data is not none %}
-    <div id="table">
-      <table border="1">
-      {% for row in data %}
-      <tr>
-        <td>{{ row['effectiveDate'] }}</td>
-        <td>{{ row['mid'] }}</td>
-      </tr>
-      {% endfor %}
+    <div class="col-md-4 col-md-offset-4" id="table">
+      <table class="table table-striped" border="1">
+        <tr><th>Date</th><th>Rate</th></tr>
+        {% for row in data %}
+        <tr>
+          <td>{{ row['effectiveDate'] }}</td>
+          <td>{{ row['mid'] }}</td>
+        </tr>
+        {% endfor %}
       </table>
     </div>
     {% endif %}

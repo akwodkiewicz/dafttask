@@ -1,6 +1,6 @@
 {% macro render_field(field) %}
-  <dt>{{ field.label }}
-  <dd>{{ field(**kwargs) }}
+  {{ field.label }}  
+  {{ field(**kwargs) }}
   {% if field.errors %}
     <ul class=errors>
     {% for error in field.errors %}
@@ -8,44 +8,50 @@
     {% endfor %}
     </ul>
   {% endif %}
-  </dd>
+  </br>
 {% endmacro %}
 
 
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <title>The DaftCode Internship Project</title>
   </head>
   <body>
-    <div>Navigation: <a href="/">Home</a>
-    <a href="/table">Table only</a>
-    <a href="/graph">Graph only</a>
-    <a href="/delete">Delete cache</a>
-    <hr>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-    <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
-    <h2>You can pick a link from the navigation bar or check the history below</h2>
-    <form class="form" role="form" method="POST">
-    {{ form.hidden_tag() }}
-    {{ render_field(form.currency) }}
-    {% if start is none %}
-    {{ render_field(form.from_date, placeholder='Start date') }}
-    {{ render_field(form.to_date, placeholder='End date') }}
-    {% else %}
-    {{ render_field(form.from_date, value=start) }}
-    {{ render_field(form.to_date, value=end) }}
-    {% endif %}
-    {{ form.submit }}
-    </form>
-    {% block content %}{% endblock %}
+    <div class="container">
+      <div>Navigation: <a href="/">Home</a>
+      <a href="/table">Table only</a>
+      <a href="/graph">Graph only</a>
+      <a href="/delete">Delete cache</a>
+      <hr>
+      </div>
+      <div class="panel">
+      <div class="panel-body">
+      <div class="col-md-9">
+        <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
+        <h3>You can pick a link from the navigation bar or type in your data on the right</h3>
+      </div>
+      <div class="col-md-3">
+        <form role="form" method="POST">
+          </br>
+          {{ form.hidden_tag() }}
+          {{ render_field(form.currency) }}
+          {% if start is none %}
+          {{ render_field(form.from_date, placeholder='Start date') }}
+          {{ render_field(form.to_date, placeholder='End date') }}
+          {% else %}
+          {{ render_field(form.from_date, value=start) }}
+          {{ render_field(form.to_date, value=end) }}
+          {% endif %}
+          <button class="btn btn-default" type="submit">
+          Submit
+          </button>
+        </form>
+        </div>
+      </div>
+      </div>
+
+      {% block content %}{% endblock %}
+    </div>
   </body>
 </html>

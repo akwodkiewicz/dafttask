@@ -35,13 +35,13 @@ def check_db(start, end, currency):
             mongo.db[currency].insert_one(rec)
 
 def validate_dates(s, e):
-    if s is None:
+    if s is None or s > e:
         start = date.today() - timedelta(days=7)
         end = date.today()
     elif (e - s) > timedelta(days=DELTA):
         start = s
         end = start + timedelta(days=DELTA)
-    elif (s < START_DATE):
+    if (s < START_DATE):
         start = START_DATE
         if (e - start) > timedelta(days=DELTA):
             end = start + timedelta(days=DELTA)
@@ -54,7 +54,9 @@ def validate_dates(s, e):
 
 def process(form):
     currency = form.currency.data  
-    (start, end) = validate_dates(form.from_date.data, form.to_date.data)  
+    (start, end) = validate_dates(form.from_date.data, form.to_date.data)
+    print("Start:{}, End:{}".format(start,end), file=stderr)
+
     check_db(start, end, currency)
     
     dates=[]
@@ -66,12 +68,11 @@ def process(form):
         {"effectiveDate": { "$lte": end.strftime("%Y-%m-%d") }}
         ]
         }).sort("effectiveDate")
-
     for row in result:
         dates.append(row['effectiveDate'])
         mids.append(row['mid'])
         data.append(row)
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
-    layout = pl.graph_objs.Layout(autosize=False, width=800, height=500)
+    layout = pl.graph_objs.Layout(autosize=True, width=600, height=500)
     graph = pl.offline.plot({"data":graph_obj, "layout":layout}, output_type="div")
     return (start, end, graph, data)
