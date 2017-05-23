@@ -9,14 +9,19 @@ from wtforms import (
     validators 
     )
 
+
+currency_dict = {
+        'usd': 'USD/PLN',
+        'eur': 'EUR/PLN',
+        'chf': 'CHF/PLN',
+        'gbp': 'GBP/PLN',
+        'jpy': 'JPY/PLN'
+        }
+
+currency_list = [(k, v) for (k,v) in currency_dict.items()]
+
 class CurrencyForm(FlaskForm):
-    currency = SelectField('Currency', choices=[('usd','USD/PLN'), ('eur','EUR/PLN')])
+    currency = SelectField('Currency', choices=currency_list)
     from_date = DateField('Start Date', format='%Y-%m-%d', validators=(validators.Optional(),))
     to_date = DateField('End Date', format='%Y-%m-%d', validators=(validators.Optional(),))
-    submit = SubmitField('Submit')
-
-class Record(object):
-    def __init__(self, no, effectiveDate, mid):
-        self.no = no
-        self.effectiveDate = effectiveDate
-        self.mid = mid
+    #submit = SubmitField('Submit')

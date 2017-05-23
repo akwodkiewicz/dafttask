@@ -16,4 +16,4 @@ mongo = PyMongo(app)
 from app import views, logic
 
 with app.app_context():
-    logic.restart_db()
+    logic.update_db()

@@ -28,10 +28,9 @@
       <button class="btn btn-default" type="submit">Submit</button>
   </form>
 </div>
-<div class="row">
   {% if data is not none %}
-  <div class="col-md-6" id="table">
-    <table class="table table-striped" style="margin-top: 100px" border="1">
+  <div class="col-md-3" id="tablediv">
+    <table class="table table-striped">
     <tr><th>Date</th><th>Rate</th></tr>
     {% for row in data %}
     <tr>
@@ -42,10 +41,9 @@
     </table>
   </div>
   {% endif %}
-  <div class="col-md-6" id="graph">
+  <div class="col-md-9" id="graph">
     {% if graph is not none %}
     {{ graph|safe }}
     {% endif %}
   </div>
-</div>
 {% endblock %}

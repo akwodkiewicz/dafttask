@@ -5,11 +5,9 @@ import requests
 from sys import stderr
 
 
-
-
 from app import app, mongo
-from .models import CurrencyForm, Record
-from .logic import make_graph, make_table, check_db, validate_dates, process
+from .models import CurrencyForm, currency_list
+from .logic import ( validate_dates, process, update_db )
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -28,6 +26,7 @@ def index():
     return render_template('home.html', form=form, graph=graph, data=data,
         start=start, end=end)
 
+
 @app.route('/table', methods=['GET', 'POST'])
 def table():
     graph = None
@@ -42,6 +41,7 @@ def table():
         if form.validate():
             (start, end, graph, data) = process(form)
     return render_template('table.html', form=form, data=data, start=start, end=end)
+
 
 @app.route('/graph', methods=['GET', 'POST'])
 def graph():
@@ -61,14 +61,18 @@ def graph():
 
 @app.route('/delete')
 def delete():
-    mongo.db['usd'].drop()
+    for (cur,_) in currency_list:
+        mongo.db[cur].drop()
+    update_db()
     return render_template('delete.html')
+
 
 @app.route('/mongo')
 def mongo_debug():
-    cursor = mongo.db['usd'].find()
+    cursor = mongo.db.collections()
     file = ""
     for doc in cursor:
         file += str(doc)
         file += '\n'
     return Response(file, mimetype='text')
+    
