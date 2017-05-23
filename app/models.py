@@ -16,8 +16,7 @@ class CurrencyForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class Record(object):
-    def __init__():
-        self.no = None
-        self.effectiveDate = None
-        self.bid = None
-        self.ask = None
+    def __init__(self, no, effectiveDate, mid):
+        self.no = no
+        self.effectiveDate = effectiveDate
+        self.mid = mid

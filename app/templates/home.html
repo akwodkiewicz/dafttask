@@ -1,8 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% if graph is not none %}
-{{ graph|safe }}
-{% endif %}
+<div id="container">
+    {% if data is not none %}
+    <div id="table">
+      <table border="1">
+      {% for row in data %}
+      <tr>
+        <td>{{ row['effectiveDate'] }}</td>
+        <td>{{ row['mid'] }}</td>
+      </tr>
+      {% endfor %}
+      </table>
+    </div>
+    {% endif %}
+    <div id="graph">
+    {% if graph is not none %}
+	{{ graph|safe }}
+	{% endif %}
+    </div>
+</div>
 
 {% endblock %}

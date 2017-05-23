@@ -1,4 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
 
+
+<div id="container">
+    {% if data is not none %}
+    <div id="table">
+      <table border="1">
+      {% for row in data %}
+      <tr>
+        <td>{{ row['effectiveDate'] }}</td>
+        <td>{{ row['mid'] }}</td>
+      </tr>
+      {% endfor %}
+      </table>
+    </div>
+    {% endif %}
+</div>
+
 {% endblock %}

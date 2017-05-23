@@ -1,3 +1,17 @@
+{% macro render_field(field) %}
+  <dt>{{ field.label }}
+  <dd>{{ field(**kwargs) }}
+  {% if field.errors %}
+    <ul class=errors>
+    {% for error in field.errors %}
+      <li><span style="color: red;">{{ error }}</span></li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  </dd>
+{% endmacro %}
+
+
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
@@ -7,6 +21,7 @@
     <div>Navigation: <a href="/">Home</a>
     <a href="/table">Table only</a>
     <a href="/graph">Graph only</a>
+    <a href="/delete">Delete cache</a>
     <hr>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
@@ -21,33 +36,16 @@
     <h2>You can pick a link from the navigation bar or check the history below</h2>
     <form class="form" role="form" method="POST">
     {{ form.hidden_tag() }}
-    {{ form.currency }}
+    {{ render_field(form.currency) }}
     {% if start is none %}
-    {{ form.from_date(placeholder='Start date') }}
-    {{ form.to_date(placeholder='End date') }}
+    {{ render_field(form.from_date, placeholder='Start date') }}
+    {{ render_field(form.to_date, placeholder='End date') }}
     {% else %}
-    {{ form.from_date(value=start) }}
-    {{ form.to_date(value=end) }}
+    {{ render_field(form.from_date, value=start) }}
+    {{ render_field(form.to_date, value=end) }}
     {% endif %}
     {{ form.submit }}
     </form>
-
-    <div id="container">
-        <div id="graph">
-          {% block content %}{% endblock %}
-        </div>
-        {% if data is not none %}
-        <div id="table">
-          <table border="1">
-          {% for row in data %}
-          <tr>
-            <td>{{ row['effectiveDate'] }}</td>
-            <td>{{ row['mid'] }}</td>
-          </tr>
-          {% endfor %}
-          </table>
-        </div>
-        {% endif %}
-    </div>
+    {% block content %}{% endblock %}
   </body>
 </html>
