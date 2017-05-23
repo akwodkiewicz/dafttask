@@ -22,7 +22,7 @@ DELTA = 92
 @app.route('/', methods=['GET', 'POST'])
 def index():
     graph = None
-    table = None
+    data = None
     start = None
     end = None
     if request.method == 'GET':
@@ -43,7 +43,7 @@ def index():
                 start = form.from_date.data
                 end = form.to_date.data
             #graph = make_graph(form.currency, form.from_date, form.to_date)
-            #table = make_table(form.currency, form.from_date, form.to_date)
+
             req = requests.get(URL.format(
                     table=TABLE_TYPE,
                     code=form.currency.data,
@@ -60,9 +60,10 @@ def index():
             dates = [x['effectiveDate'] for x in data]
             mids = [x['mid'] for x in data]
             graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
-            graph = pl.offline.plot({"data":graph_obj}, output_type="div")
+            layout = pl.graph_objs.Layout(autosize=False, width=800, height=500)
+            graph = pl.offline.plot({"data":graph_obj, "layout":layout}, output_type="div")
 
-    return render_template('home.html', form=form, graph=graph, table=table, 
+    return render_template('home.html', form=form, graph=graph, data=data,
         start=start, end=end)
 
 @app.route('/table', methods=['GET', 'POST'])
