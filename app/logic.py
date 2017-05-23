@@ -29,33 +29,76 @@ def validate_dates(s, e):
 
 
 def process(form):
+    """Processes submitted form and prepares table data and a graph"""
     currency = form.currency.data  
     (start, end) = validate_dates(form.from_date.data, form.to_date.data)
     dates=[]
     mids=[]
     data=[]
-    result = mongo.db[currency].find({"$and":
-        [
+    #Find all the docs from start 'till the end
+    result = mongo.db[currency].find({"$and":[
         {"effectiveDate": { "$gte": start.strftime("%Y-%m-%d") }},
         {"effectiveDate": { "$lte": end.strftime("%Y-%m-%d") }}
-        ]
-        }).sort("effectiveDate")
-    for row in result:
-        dates.append(row['effectiveDate'])
-        mids.append(row['mid'])
-        data.append(row)
+        ]}).sort("effectiveDate")
+    #Prepare data for the table (and for making a new graph)
+    for doc in result:
+        dates.append(doc['effectiveDate'])
+        mids.append(doc['mid'])
+        data.append(doc)
+    #Try to find an existing graph for this set of values
+    graph_record = mongo.db['graphs'].find_one({
+        "start":start.strftime("%Y-%m-%d"),
+        "end":end.strftime("%Y-%m-%d"),
+        "currency":currency
+        })
+    if graph_record is None:
+        graph_record = make_and_get_graph(currency, start, end, dates, mids)
+    return (start, end, graph_record["graph"], data)
+
+
+def make_and_get_graph(currency, start, end, dates, mids):
+    """Makes a new graph, adds it to the database and returns it"""
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
     layout = pl.graph_objs.Layout(
-                                title=currency_dict[currency],
-                                xaxis={"title":"Date"},
-                                yaxis={"title":"Exchange rate"},
-                                height=600
-                                )
+                            title=currency_dict[currency],
+                            xaxis={"title":"Date"},
+                            yaxis={"title":"Exchange rate"},
+                            height=600
+                            )
     graph = pl.offline.plot({"data":graph_obj, "layout":layout}, output_type="div")
-    return (start, end, graph, data)
+    mongo.db['graphs'].insert_one({
+        "start":start.strftime("%Y-%m-%d"),
+        "end":end.strftime("%Y-%m-%d"),
+        "currency":currency,
+        "graph":graph
+        })
+    return graph
 
 
-async def populate_db(last_update):
+def update_db():
+    """
+    Updates the database from the latest record up to current day 
+    using asyncio event loop.
+    """
+    latest_date = find_latest_record_date()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(prepare_and_start_futures(latest_date))
+    loop.close()
+
+
+def find_latest_record_date():
+    last_record_cursor = mongo.db['usd'].find().sort("effectiveDate",-1)
+    if last_record_cursor.count() != 0:
+        last_record = last_record_cursor[0]
+        last_date = datetime.strptime(last_record["effectiveDate"], "%Y-%m-%d").date()
+    else:
+        last_date = START_DATE
+    return last_date
+
+
+async def prepare_and_start_futures(last_update):
+    """Queues all the requests and starts them asynchronously"""
     futures = []
     async with aiohttp.ClientSession() as session:
         for (currency, _) in currency_list:
@@ -73,6 +116,7 @@ async def populate_db(last_update):
 
                 
 async def get_from_nbp(session, currency, start_date, end_date):
+    """Sends one GET request and enters the result into database"""
     url = URL.format(
         table=TABLE_TYPE,
         code=currency,
@@ -80,22 +124,12 @@ async def get_from_nbp(session, currency, start_date, end_date):
         endDate=end_date
         )
     async with session.get(url, params={'format': 'json'}) as response:
-        json = await response.json()
-        record_list = json['rates']
-        for rec in record_list:
-            if mongo.db[currency].find_one(rec) is None:
-                print(rec, file=stderr)
-                mongo.db[currency].insert_one(rec)
-
-
-def update_db():
-    last_record_cursor = mongo.db['jpy'].find().sort("effectiveDate",-1)
-    if last_record_cursor.count() != 0:
-        last_record = last_record_cursor[0]
-        last_date = datetime.strptime(last_record["effectiveDate"], "%Y-%m-%d").date()
-    else:
-        last_date = START_DATE
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(populate_db(last_date))
-    loop.close()
+        try:
+            json = await response.json()
+            record_list = json['rates']
+            for rec in record_list:
+                if mongo.db[currency].find_one(rec) is None:
+                    #print(rec, file=stderr)
+                    mongo.db[currency].insert_one(rec)
+        except aiohttp.errors.ClientResponseError as exc:
+            print("EXCPTIN! Url:{}, code:{}".format(url, exc.code), file=stderr)

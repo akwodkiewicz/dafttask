@@ -56,9 +56,4 @@ def delete():
 
 @app.route('/mongo')
 def mongo_debug():
-    cursor = mongo.db.collections()
-    file = ""
-    for doc in cursor:
-        file += str(doc)
-        file += '\n'
-    return Response(file, mimetype='text')
+    return Response(mongo.db.collection_names(), mimetype='text')
