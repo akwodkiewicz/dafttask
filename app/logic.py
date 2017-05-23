@@ -57,7 +57,7 @@ def process(form):
 
 
 def make_and_get_graph(currency, start, end, dates, mids):
-    """Makes a new graph, adds it to the database and returns it"""
+    """Makes a new graph, adds it to the database and returns a record"""
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
     layout = pl.graph_objs.Layout(
                             title=currency_dict[currency],
@@ -66,13 +66,14 @@ def make_and_get_graph(currency, start, end, dates, mids):
                             height=600
                             )
     graph = pl.offline.plot({"data":graph_obj, "layout":layout}, output_type="div")
-    mongo.db['graphs'].insert_one({
+    record = {
         "start":start.strftime("%Y-%m-%d"),
         "end":end.strftime("%Y-%m-%d"),
         "currency":currency,
         "graph":graph
-        })
-    return graph
+        }
+    mongo.db['graphs'].insert_one(record)
+    return record
 
 
 def update_db():
