@@ -10,12 +10,11 @@ from .models import CurrencyForm, currency_list
 from .logic import ( validate_dates, process, update_db )
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    graph = None
-    data = None
+def default_action():
     start = date.today()-timedelta(days=7)
     end = date.today()
+    graph = None
+    data = None
     form = CurrencyForm(request.form)
     if request.method == 'GET':
         form.from_date.data = start
@@ -25,43 +24,25 @@ def index():
     if request.method == 'POST':
         if form.validate():
             (start, end, graph, data) = process(form)
+    return (start, end, graph, data, form)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    (start, end, graph, data, form) = default_action()
     return render_template('home.html', form=form, graph=graph, data=data,
         start=start, end=end)
 
 
 @app.route('/table', methods=['GET', 'POST'])
 def table():
-    graph = None
-    data = None
-    start = date.today()-timedelta(days=7)
-    end = date.today()
-    form = CurrencyForm(request.form)
-    if request.method == 'GET':
-        form.from_date.data = start
-        form.to_date.data = end
-        form.currency.data = 'usd'
-        (start, end, graph, data) = process(form)
-    if request.method == 'POST':
-        if form.validate():
-            (start, end, graph, data) = process(form)
+    (start, end, graph, data, form) = default_action()
     return render_template('table.html', form=form, data=data, start=start, end=end)
 
 
 @app.route('/graph', methods=['GET', 'POST'])
 def graph():
-    graph = None
-    data = None
-    start = date.today()-timedelta(days=7)
-    end = date.today()
-    form = CurrencyForm(request.form)
-    if request.method == 'GET':
-        form.from_date.data = start
-        form.to_date.data = end
-        form.currency.data = 'usd'
-        (start, end, graph, data) = process(form)
-    if request.method == 'POST':
-        if form.validate():
-            (start, end, graph, data) = process(form)
+    (start, end, graph, data, form) = default_action()
     return render_template('graph.html', form=form, graph=graph, start=start, end=end)
 
 
