@@ -2,11 +2,9 @@
   {{ field.label }}  
   {{ field(**kwargs) }}
   {% if field.errors %}
-    <ul class=errors>
     {% for error in field.errors %}
-      <li><span style="color: red;">{{ error }}</span></li>
+      <span style="color: red;">{{ error }}</span>
     {% endfor %}
-    </ul>
   {% endif %}
   </br>
 {% endmacro %}

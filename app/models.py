@@ -27,3 +27,12 @@ class CurrencyForm(FlaskForm):
     to_date = DateField('End Date', format='%Y-%m-%d', validators=(validators.Optional(),))
     #submit = SubmitField('Submit')
 
+class Previous(object):
+    def __init__(self, start, end, currency):
+        self.start = start
+        self.end = end
+        self.currency = currency
+    def update(self, start, end, currency):
+        self.start = start
+        self.end = end
+        self.currency = currency

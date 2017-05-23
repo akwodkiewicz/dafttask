@@ -2,11 +2,12 @@ import requests
 import asyncio
 import aiohttp
 import plotly as pl
+from flask import render_template, request, Response
 from datetime import timedelta, date, datetime
 from sys import stderr
 
 from app import app, mongo
-from .models import currency_list, currency_dict
+from .models import currency_list, currency_dict, Previous, CurrencyForm
 
 URL = 'http://api.nbp.pl/api/exchangerates/rates/{table}/{code}/{startDate}/{endDate}/'
 TABLE_TYPE = 'A'
@@ -14,6 +15,18 @@ START_DATE = date(2002, 1, 1)
 END_DATE = date.today()
 DELTA = 93
 
+previous = Previous(date.today() - timedelta(days=7), date.today(), 'usd')
+
+def default_action():
+    form = CurrencyForm(request.form)
+    if request.method == 'GET':
+        (start, end, graph, data) = process(form)
+    if request.method == 'POST':
+        if form.validate():
+            (start, end, graph, data) = process(form)
+        else:
+            (start, end, graph, data) = process(form, invalidated=True)
+    return (start, end, graph, data, form)
 
 def validate_dates(s, e):
     if s is None or s > e:
@@ -27,11 +40,24 @@ def validate_dates(s, e):
         end = e
     return (start, end)
 
+def process_from_previous(form):
+    global previous
+    start = previous.start
+    end = previous.end
+    currency = previous.currency
+    form.from_date.data = start
+    form.to_date.data = end
+    form.currency.data = currency
+    return (start, end, currency)
 
-def process(form):
+def process(form, invalidated=False):
     """Processes submitted form and prepares table data and a graph"""
-    currency = form.currency.data  
-    (start, end) = validate_dates(form.from_date.data, form.to_date.data)
+    if form.currency.data == 'None' or invalidated == True:
+        (start, end, currency) = process_from_previous(form)
+    else:
+        (start, end) = validate_dates(form.from_date.data, form.to_date.data)
+        currency = form.currency.data
+        previous.update(start, end, currency)
     dates=[]
     mids=[]
     data=[]
@@ -53,6 +79,8 @@ def process(form):
         })
     if graph_record is None:
         graph_record = make_and_get_graph(currency, start, end, dates, mids)
+    else:
+        print("FOUND GRAPH IN DB", file=stderr)
     return (start, end, graph_record["graph"], data)
 
 
