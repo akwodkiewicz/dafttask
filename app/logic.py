@@ -41,15 +41,16 @@ def validate_dates(s, e):
     elif (e - s) > timedelta(days=DELTA):
         start = s
         end = start + timedelta(days=DELTA)
+    else:
+        start = s
+        end = e
     if (s < START_DATE):
         start = START_DATE
         if (e - start) > timedelta(days=DELTA):
             end = start + timedelta(days=DELTA)
         else:
             end = e
-    else:
-        start = s
-        end = e
+
     return (start, end)
 
 def process(form):
@@ -73,6 +74,6 @@ def process(form):
         mids.append(row['mid'])
         data.append(row)
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
-    layout = pl.graph_objs.Layout(autosize=True, width=600, height=500)
+    layout = pl.graph_objs.Layout(autosize=True)
     graph = pl.offline.plot({"data":graph_obj, "layout":layout}, output_type="div")
     return (start, end, graph, data)
