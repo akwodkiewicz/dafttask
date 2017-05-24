@@ -14,10 +14,11 @@ TABLE_TYPE = 'A'
 START_DATE = date(2002, 1, 1)
 END_DATE = date.today()
 DELTA = 93
-
 previous = Previous(date.today() - timedelta(days=7), date.today(), 'usd')
 
+
 def default_action():
+    """Default function called by the main page and 2 subpages"""
     form = CurrencyForm(request.form)
     if request.method == 'GET':
         (start, end, graph, data) = process(form)
@@ -28,7 +29,9 @@ def default_action():
             (start, end, graph, data) = process(form, invalidated=True)
     return (start, end, graph, data, form)
 
+
 def validate_dates(s, e):
+    """Date validation for making a proper request"""
     if s is None or s > e:
         start = date.today() - timedelta(days=7)
         end = date.today()
@@ -40,7 +43,12 @@ def validate_dates(s, e):
         end = e
     return (start, end)
 
+
 def process_from_previous(form):
+    """
+    Returns (start, end, currency) tuple based on previously used values
+    and sets those values inside proper form fields for the user to see
+    """
     global previous
     start = previous.start
     end = previous.end
@@ -50,42 +58,60 @@ def process_from_previous(form):
     form.currency.data = currency
     return (start, end, currency)
 
+
 def process(form, invalidated=False):
     """Processes submitted form and prepares table data and a graph"""
+
+    #Setting proper (start, end, currency) values
     if form.currency.data == 'None' or invalidated == True:
         (start, end, currency) = process_from_previous(form)
     else:
         (start, end) = validate_dates(form.from_date.data, form.to_date.data)
         currency = form.currency.data
         previous.update(start, end, currency)
-    dates=[]
-    mids=[]
-    data=[]
+
     #Find all the docs from start 'till the end
     result = mongo.db[currency].find({"$and":[
         {"effectiveDate": { "$gte": start.strftime("%Y-%m-%d") }},
         {"effectiveDate": { "$lte": end.strftime("%Y-%m-%d") }}
-        ]}).sort("effectiveDate")
-    #Prepare data for the table (and for making a new graph)
+        ]}).sort("effectiveDate", -1)
+
+    #Prepare data for the table (and for a new graph)
+    dates=[]
+    mids=[]
+    data=[]
     for doc in result:
         dates.append(doc['effectiveDate'])
         mids.append(doc['mid'])
         data.append(doc)
+
     #Try to find an existing graph for this set of values
     graph_record = mongo.db['graphs'].find_one({
         "start":start.strftime("%Y-%m-%d"),
         "end":end.strftime("%Y-%m-%d"),
         "currency":currency
         })
-    if graph_record is None:
+
+    #If it doesn't exist - make a new one
+    if graph_record is None: 
         graph_record = make_and_get_graph(currency, start, end, dates, mids)
+    #If we had previously less data about this period, 
+    #delete the old graph and make a new one
+    elif graph_record["points"] < len(data):
+        mongo.db["graphs"].delete(graph_record)
+        graph_record = make_and_get_graph(currency, start, end, dates, mids)
+    #else continue
     else:
-        print("FOUND GRAPH IN DB", file=stderr)
+        print("USING GRAPH FROM DB", file=stderr)
+
     return (start, end, graph_record["graph"], data)
 
 
 def make_and_get_graph(currency, start, end, dates, mids):
-    """Makes a new graph, adds it to the database and returns a record"""
+    """
+    Makes a new graph, adds it to the database 
+    and returns a whole record (a dictionary)
+    """
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
     layout = pl.graph_objs.Layout(
                             title=currency_dict[currency],
@@ -98,7 +124,8 @@ def make_and_get_graph(currency, start, end, dates, mids):
         "start":start.strftime("%Y-%m-%d"),
         "end":end.strftime("%Y-%m-%d"),
         "currency":currency,
-        "graph":graph
+        "graph":graph,
+        "points":len(dates)
         }
     mongo.db['graphs'].insert_one(record)
     return record
@@ -113,7 +140,7 @@ def update_db():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(prepare_and_start_futures(latest_date))
-    loop.close()
+    #loop.close()
 
 
 def find_latest_record_date():
@@ -152,13 +179,25 @@ async def get_from_nbp(session, currency, start_date, end_date):
         startDate=start_date,
         endDate=end_date
         )
-    async with session.get(url, params={'format': 'json'}) as response:
-        try:
-            json = await response.json()
-            record_list = json['rates']
-            for rec in record_list:
-                if mongo.db[currency].find_one(rec) is None:
-                    #print(rec, file=stderr)
-                    mongo.db[currency].insert_one(rec)
-        except aiohttp.errors.ClientResponseError as exc:
-            print("EXCPTIN! Url:{}, code:{}".format(url, exc.code), file=stderr)
+    try:
+        async with session.get(url, params={'format': 'json'}, timeout=30) as response:
+            try:
+                json = await response.json()
+                record_list = json['rates']
+                for rec in record_list:
+                    if mongo.db[currency].find_one(rec) is None:
+                        #print(rec, file=stderr)
+                        mongo.db[currency].insert_one(rec)
+            except aiohttp.ClientResponseError as e:
+                print("--- Wrong response from:{}\n---{}".format(url, e),
+                    file=stderr)
+    except aiohttp.ClientConnectionError as e:
+        print("--- ConnectionError when sending a request:\n--- {}".format(e),
+            file=stderr)
+    except asyncio.TimeoutError as e:
+        print("--- Timeout when sending a request:\n--- {}".format(e),
+            file=stderr)
+    except Exception as e:
+        print("--- Unkown exception when sending a request:\n--- {}".format(e),
+            file=stderr)
+
