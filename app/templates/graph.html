@@ -9,28 +9,36 @@
 
 
 {% block content %}
-<div class="col-md-9">
-  <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
-  <h3>You can pick a link from the navigation bar or type in your data on the right</h3>
+<div class="panel">
+  <div class="panel-body">
+    <div class="col-md-9">
+      <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
+      <h3>You can pick a link from the navigation bar or type in your data on the right</h3>
+    </div>
+    <div class="col-md-3">
+      <form role="form" method="POST">
+        <br/>
+          {{ form.hidden_tag() }}
+          {{ render_field(form.currency) }}
+          {% if start is none %}
+          {{ render_field(form.from_date, placeholder='Start date') }}
+          {{ render_field(form.to_date, placeholder='End date') }}
+          {% else %}
+          {{ render_field(form.from_date, value=start) }}
+          {{ render_field(form.to_date, value=end) }}
+          {% endif %}
+          <button class="btn btn-default" type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
 </div>
-<div class="col-md-3">
-  <form role="form" method="POST">
-    <br/>
-      {{ form.hidden_tag() }}
-      {{ render_field(form.currency) }}
-      {% if start is none %}
-      {{ render_field(form.from_date, placeholder='Start date') }}
-      {{ render_field(form.to_date, placeholder='End date') }}
-      {% else %}
-      {{ render_field(form.from_date, value=start) }}
-      {{ render_field(form.to_date, value=end) }}
+<div class="panel">
+  <div class="panel-body">
+    <div class="col-md-12" id="graph">
+      {% if graph is not none %}
+      {{ graph|safe }}
       {% endif %}
-      <button class="btn btn-default" type="submit">Submit</button>
-  </form>
-</div>
-<div class="col-md-12" id="graph">
-  {% if graph is not none %}
-  {{ graph|safe }}
-  {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

@@ -165,7 +165,7 @@ def find_empty_record_dates():
     """
     Finds all the missing chunks of records in the database
     and for each currency in CURRENCY_DICT (in models.py)
-    returns their list of 'start_dates'.
+    returns its list of 'start_dates'.
     Example return:
     empty_record_dates = {
         'usd': [datetime.date(2005, 5, 7),
@@ -227,11 +227,12 @@ async def get_from_nbp(session, currency, start_date, end_date):
             headers={'Accept': 'application/json'}, 
             timeout=30
             ) as response:
+            
+            if response.content_type == 'application/json':
+                correct_responses_counter += 1
+            else:
+                wrong_responses_counter += 1
             try:
-                if response.content_type == 'application/json':
-                    correct_responses_counter += 1
-                else:
-                    wrong_responses_counter += 1
                 json = await response.json()    
                 record_list = json['rates']
                 for rec in record_list:
@@ -239,14 +240,14 @@ async def get_from_nbp(session, currency, start_date, end_date):
                         #print(rec, file=stderr)
                         mongo.db[currency].insert_one(rec)
             except aiohttp.ClientResponseError as e:
-                print("--- Wrong response from:{} ---\n---{}---"\
-                    .format(response, e), file=stderr)
+                print("--- Wrong response from:{}\n---{}---"\
+                    .format(response, e.message), file=stderr)
     except aiohttp.ClientConnectionError as e:
-        print("--- ConnectionError when sending a request: {} ---".format(e),
-            file=stderr)
+        print("--- ConnectionError when sending a request: {} ---"\
+            .format(e), file=stderr)
     except asyncio.TimeoutError as e:
         print("--- Timeout when sending a request ---", file=stderr)
     except Exception as e:
-        print("--- Unkown exception when sending a request: {} ---".format(e),
-            file=stderr)
+        print("--- Unkown exception when sending a request: {} ---"\
+            .format(e), file=stderr)
 
