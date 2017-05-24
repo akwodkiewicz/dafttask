@@ -1,13 +1,13 @@
-from flask import render_template, request, Response
+from flask import render_template, request, Response, redirect, url_for
 from flask_pymongo import PyMongo
 from datetime import datetime, timedelta, date
 import requests
+from pprint import pprint
 from sys import stderr
 
 
 from app import app, mongo
-from .models import CurrencyForm, currency_list
-from .logic import ( validate_dates, process, update_db, previous, default_action)
+from .logic import (update_db, default_action, find_empty_record_dates)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -31,13 +31,14 @@ def graph():
 
 @app.route('/delete')
 def delete():
-    for (cur,_) in currency_list:
-        mongo.db[cur].drop()
-    mongo.db['graphs'].drop()
-    #update_db()
-    return render_template('delete.html')
+    for col in mongo.db.collection_names():
+        mongo.db[col].drop()
+    update_db()
+    return render_template('delete.html', f=redirect(url_for('index')))
 
 
 @app.route('/mongo')
 def mongo_debug():
-    return Response(mongo.db.collection_names(), mimetype='text')
+    result = find_empty_record_dates()
+    pprint(result, stream=stderr)
+    return "Check console"

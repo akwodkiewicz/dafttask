@@ -10,19 +10,24 @@ from wtforms import (
     validators 
     )
 
-
-currency_dict = {
+### Constants
+URL = 'http://api.nbp.pl/api/exchangerates/rates/{table}/{code}/{startDate}/{endDate}/?format=json'
+TABLE_TYPE = 'A'
+START_DATE = date(2002, 1, 1)
+END_DATE = date.today()
+DELTA = 93
+CURRENCY_DICT = {
         'usd': 'USD/PLN',
         'eur': 'EUR/PLN',
         'chf': 'CHF/PLN',
         'gbp': 'GBP/PLN',
         'jpy': 'JPY/PLN'
         }
+CURRENCY_LIST = [(k, v) for (k,v) in CURRENCY_DICT.items()]
 
-currency_list = [(k, v) for (k,v) in currency_dict.items()]
 
 class CurrencyForm(FlaskForm):
-    currency = SelectField('Currency', choices=currency_list)
+    currency = SelectField('Currency', choices=CURRENCY_LIST)
     from_date = DateField('Start Date', format='%Y-%m-%d', validators=(validators.Optional(),))
     to_date = DateField('End Date', format='%Y-%m-%d', validators=(validators.Optional(),))
     #submit = SubmitField('Submit')
