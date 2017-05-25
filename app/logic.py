@@ -182,6 +182,7 @@ def find_empty_record_dates():
     for cur in CURRENCY_DICT.keys():
         empty_record_dates[cur] = []
         current_date = START_DATE
+        # Find all the DELTA-long chunks 
         while current_date < END_DATE:
             end_date = current_date+timedelta(days=DELTA)
             result = mongo.db[cur].find_one({"$and":[
@@ -191,6 +192,10 @@ def find_empty_record_dates():
             if result is None:
                 empty_record_dates[cur].append(current_date)
             current_date += timedelta(days=DELTA+1)
+        # Add current DELTA-long chunk
+        # (we might be missing up to DELTA-1 records)
+        empty_record_dates[cur].append(date.today()-timedelta(days=DELTA))
+
     return empty_record_dates
 
 
