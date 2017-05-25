@@ -41,22 +41,27 @@ def graph():
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
+    wrong = -1
+    correct = -1
+    deleted = False
     if request.method == 'POST':
         # Pressing a button on delete.html page generates a value
         # inside the 'form' dictionary, under the key=='task'
         val = request.form.get('task', None)
         if val == 'update':
-            update_db()    
+            (correct, wrong) = update_db()
         elif val == 'delete':
             for col in mongo.db.collection_names():
                 mongo.db[col].drop()
+            deleted = True
 
-    return render_template('delete.html')
+    return render_template('delete.html', wrong=wrong, correct=correct,
+                            deleted=deleted)
 
 
 @app.route('/mongo')
 def mongo_debug():
-    rec = mongo.db.usd.find_one()
+    rec = mongo.db.usd.find_one({"effectiveDate":date.today()})
     mongo.db.usd.delete_one(rec)
     print(rec, file=stderr)
     return "Check console"

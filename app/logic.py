@@ -163,21 +163,22 @@ def update_db():
         ), file=stderr, flush=True
     )
     loop.close()
+    return (correct_responses_counter, wrong_responses_counter)
 
 
 def find_empty_record_dates():
     """
     Finds all the missing chunks of records in the database
-    and for each currency in CURRENCY_DICT (in models.py)
-    returns its list of 'start_dates'.
+    and for each currency in CURRENCY_DICT returns its list of 'start dates'.
     Example return:
     empty_record_dates = {
-        'usd': [datetime.date(2005, 5, 7),
-                datetime.date(2005, 8, 9),
-                datetime.date(2005, 11, 11)],
-        'jpy': [datetime.date(2007, 12, 3)],
-        'chf': [],
-
+        'usd': [date(2005, 5, 7),
+                date(2005, 8, 9),
+                date(2005, 11, 11),
+                date.today()-timedelta(days=DELTA)],
+        'jpy': [date(2007, 12, 3)],
+                date.today()-timedelta(days=DELTA)],
+        'chf': [date.today()-timedelta(days=DELTA)],
         ... etc. ...
     }
     """
@@ -235,29 +236,29 @@ async def get_from_nbp(session, currency, start_date, end_date):
         )
     try:
         async with session.get(url, 
-            headers={'Accept': 'application/json'}, 
-            timeout=45) as response:
-            
-            if response.content_type == 'application/json':
-                correct_responses_counter += 1
-            else:
-                wrong_responses_counter += 1
+                    headers={'Accept': 'application/json'}, 
+                    timeout=45) as response:
+
             try:
                 json = await response.json()    
                 record_list = json['rates']
                 for rec in record_list:
                     if mongo.db[currency].find_one(rec) is None:
                         mongo.db[currency].insert_one(rec)      
+                correct_responses_counter += 1
 
             except aiohttp.ClientResponseError as e:
+                wrong_responses_counter += 1
                 print("-!- Wrong response from:{}\n-!- {}"\
                     .format(response, e.message), file=stderr)
 
     except aiohttp.ClientConnectionError as e:
+        wrong_responses_counter += 1
         print("-!- ConnectionError for:{}\n-!- {}"\
             .format(url, e), file=stderr)
 
     except asyncio.TimeoutError as e:
+        wrong_responses_counter += 1
         print("-!- Timeout for {}".format(url), file=stderr)
 
     except Exception as e:

@@ -18,26 +18,37 @@
       </div>
       {% block content %}
       <div class="panel">
-        <div class="panel-header">
-          <div class="col-md-12">
-            <h3 class="text-center">You can delete or update the database by pressing the right button</h3>
-            <h4 class="text-center">The application can freeze for a little while</h4>
-            <br/>
-          </div>
-        </div>
         <div class="panel-body">
-          <div class="col-md-12">
-            <form role="form" method="post">
-              <div class="col-md-1 col-md-offset-4">
-                <button class="btn btn-danger" type="submit" name="task" value="delete">Delete cache</button>
-              </div>
-              <div class="col-md-1 col-md-offset-1">
-                <button class="btn btn-warning" type="submit" name="task" value="update">Update database</button>
-              </div>
-            </form>
+
+        <h3 class="text-center">You can delete or update the database by pressing the right button</h3>
+        <h4 class="text-center">The application can freeze for a little while</h4>
+        <br/>
+        <form role="form" method="post">
+          <div class="col-md-1 col-md-offset-4">
+            <button class="btn btn-danger" type="submit" name="task" value="delete">Delete cache</button>
           </div>
+          <div class="col-md-1 col-md-offset-1">
+            <button class="btn btn-warning" type="submit" name="task" value="update">Update database</button>
+          </div>
+        </form>
+        
         </div>
       </div>
+      {% if deleted %}
+        <div class="alert alert-success">
+        Deleted all the records from the database!
+        </div>
+        {% endif %}
+        {% if correct > 0 %}
+        <div class="alert alert-success">
+        Added {{ correct }} requests to the database!
+        </div>
+        {% endif %}
+        {% if wrong > 0 %}
+        <div class="alert alert-warning">
+        Received {{ wrong }} wrong requests from NBP!
+        </div>
+      {% endif %}
       {% endblock %}
     </div>
   </body>
