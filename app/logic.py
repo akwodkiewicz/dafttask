@@ -122,7 +122,7 @@ def make_and_get_graph_record(currency, start, end, data):
     and returns a whole record (a dictionary)
     """
     dates = [row['effectiveDate'] for row in data]
-    mids = [row['mids'] for row in data]
+    mids = [row['mid'] for row in data]
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
     layout = pl.graph_objs.Layout(
                             title=CURRENCY_DICT[currency],
