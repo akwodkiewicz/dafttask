@@ -30,23 +30,33 @@
               <button class="btn btn-warning" type="submit" name="task" value="update">Update database</button>
             </div>
           </form>
-          <br/>
+          <br/><br/><br/>
         </div>
       </div>
       {% if deleted %}
-        <div class="alert alert-success">
-        Deleted all the records from the database!
-        </div>
-        {% endif %}
-        {% if correct > 0 %}
-        <div class="alert alert-success">
-        Inserted {{ correct }} documents into the database!
-        </div>
-        {% endif %}
-        {% if wrong > 0 %}
-        <div class="alert alert-warning">
-        Received {{ wrong }} wrong requests from NBP!
-        </div>
+      <div class="alert alert-success">
+      <strong>Deleted all the records from the database!</strong>
+      </div>
+      {% endif %}
+      {% if correct > 0 %}
+      <div class="alert alert-success">
+      Inserted <strong>{{ correct }} documents</strong> into the database!
+      </div>
+      {% endif %}
+      {% if correct == 0 and wrong == 0 %}
+      <div class="alert alert-info">
+      <strong>No documents</strong> added into the database! Database is up-to-date!
+      </div>
+      {% endif %}
+      {% if correct == 0 and wrong > 0 %}
+      <div class="alert alert-warning">
+      <strong>No documents</strong> added into the database!
+      </div>
+      {% endif %}
+      {% if wrong > 0 %}
+      <div class="alert alert-warning">
+      Received <strong>{{ wrong }} wrong responses</strong> from NBP!
+      </div>
       {% endif %}
       {% endblock %}
     </div>

@@ -16,7 +16,8 @@ from .models import (
     DELTA,
     CURRENCY_DICT,
     CURRENCY_LIST,
-    SLEEP_TIME
+    SLEEP_TIME,
+    TIMEOUT
 )
 
 ### Global mutable objects
@@ -43,6 +44,8 @@ def default_action():
 
 def validate_dates(s, e):
     """Date validation for making a proper request"""
+    if e > date.today():
+        e = date.today()
     if s is None or s > e:
         start = date.today() - timedelta(days=7)
         end = date.today()
@@ -164,7 +167,6 @@ def update_db():
         wrong_responses_counter
         ), file=stderr, flush=True
     )
-    loop.close()
     return (inserted_records_counter, wrong_responses_counter)
 
 
@@ -237,9 +239,11 @@ async def get_from_nbp(session, currency, start_date, end_date):
         endDate=end_date
         )
     try:
-        async with session.get(url, 
+        async with session.get(
+                    url,
                     headers={'Accept': 'application/json'}, 
-                    timeout=45) as response:
+                    timeout=TIMEOUT
+                    ) as response:
 
             try:
                 json = await response.json()    
@@ -252,7 +256,7 @@ async def get_from_nbp(session, currency, start_date, end_date):
             except aiohttp.ClientResponseError as e:
                 wrong_responses_counter += 1
                 print("-!- Wrong response from:{}\n-!- {}"\
-                    .format(response, e.message), file=stderr)
+                    .format(url, e), file=stderr)
 
     except aiohttp.ClientConnectionError as e:
         wrong_responses_counter += 1

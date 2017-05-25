@@ -24,7 +24,8 @@ CURRENCY_DICT = {
         'jpy': 'JPY/PLN'
         }
 CURRENCY_LIST = [(k, v) for (k,v) in CURRENCY_DICT.items()]
-SLEEP_TIME = 1
+SLEEP_TIME = 0.2
+TIMEOUT = 40
 
 
 class CurrencyForm(FlaskForm):
