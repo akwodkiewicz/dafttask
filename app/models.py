@@ -24,7 +24,7 @@ CURRENCY_DICT = {
         'jpy': 'JPY/PLN'
         }
 CURRENCY_LIST = [(k, v) for (k,v) in CURRENCY_DICT.items()]
-
+SLEEP_TIME = 1
 
 class CurrencyForm(FlaskForm):
     currency = SelectField('Currency', choices=CURRENCY_LIST)

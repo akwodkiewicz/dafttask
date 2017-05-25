@@ -1,3 +1,4 @@
+import time
 import requests
 import asyncio
 import aiohttp
@@ -15,7 +16,8 @@ from .models import (
     END_DATE,
     DELTA,
     CURRENCY_DICT,
-    CURRENCY_LIST
+    CURRENCY_LIST,
+    SLEEP_TIME
 )
 
 ### Global mutable objects
@@ -69,7 +71,7 @@ def process_from_previous(form):
 def process(form, invalidated=False):
     """Processes submitted form and prepares table data and a graph"""
 
-    #Setting proper (start, end, currency) values
+    # Setting proper (start, end, currency) values
     if form.currency.data == 'None' or invalidated == True:
         (start, end, currency) = process_from_previous(form)
     else:
@@ -77,13 +79,13 @@ def process(form, invalidated=False):
         currency = form.currency.data
         previous.update(start, end, currency)
 
-    #Find all the docs from defined start 'till the end
+    # Find all the docs from defined start 'till the end
     result = mongo.db[currency].find({"$and":[
         {"effectiveDate": { "$gte": start.strftime("%Y-%m-%d") }},
         {"effectiveDate": { "$lte": end.strftime("%Y-%m-%d") }}
         ]}).sort("effectiveDate", -1)
 
-    #Prepare data for the table (and for a new graph)
+    # Prepare data for the table (and for a new graph)
     dates=[]
     mids=[]
     data=[]
@@ -92,26 +94,25 @@ def process(form, invalidated=False):
         mids.append(doc['mid'])
         data.append(doc)
 
-    #Try to find an existing graph for this set of values
+    # Try to find an existing graph for this set of values
     graph_record = mongo.db['graphs'].find_one({
         "start":start.strftime("%Y-%m-%d"),
         "end":end.strftime("%Y-%m-%d"),
         "currency":currency
         })
 
-    #If it doesn't exist - make a new one
+    # If it doesn't exist - make a new one
     if graph_record is None: 
         graph_record = make_and_get_graph_record(currency, start, end, 
                                                 dates, mids)
-    #If we had previously less data about this period (possibly due to errors),
-    #delete the old graph and make a new one
+    # If we had previously less data about this period -
+    # delete the old graph and make a new one
     elif graph_record["points"] < len(data):
         mongo.db["graphs"].delete_one(graph_record)
         graph_record = make_and_get_graph_record(currency, start, end, 
                                                 dates, mids)
-    #else continue
     else:
-        print("USING GRAPH FROM DB", file=stderr)
+        print("--- Using graph from DB", file=stderr, flush=True)
 
     return (start, end, graph_record["graph"], data)
 
@@ -154,10 +155,10 @@ def update_db():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(prepare_and_start_futures(empty_record_dates))
-    print("Correct responses: {}\nWrong responses:{}".format(
+    print("--- Correct responses: {}\n--- Wrong responses: {}".format(
         correct_responses_counter,
         wrong_responses_counter
-        ), file=stderr
+        ), file=stderr, flush=True
     )
     loop.close()
 
@@ -213,6 +214,9 @@ async def prepare_and_start_futures(empty_record_dates):
                 futures.append(
                     get_from_nbp(session, currency, current_date, end_date)
                 )
+            # Added some sleeping to decrease the number of wrong responses
+            # received from the NBP api
+            time.sleep(SLEEP_TIME)
 
         if len(futures) != 0:
             await asyncio.wait(futures)
@@ -228,11 +232,9 @@ async def get_from_nbp(session, currency, start_date, end_date):
         endDate=end_date
         )
     try:
-        async with session.get(
-            url, 
+        async with session.get(url, 
             headers={'Accept': 'application/json'}, 
-            timeout=30
-            ) as response:
+            timeout=45) as response:
             
             if response.content_type == 'application/json':
                 correct_responses_counter += 1
@@ -243,16 +245,21 @@ async def get_from_nbp(session, currency, start_date, end_date):
                 record_list = json['rates']
                 for rec in record_list:
                     if mongo.db[currency].find_one(rec) is None:
-                        #print(rec, file=stderr)
-                        mongo.db[currency].insert_one(rec)
+                        mongo.db[currency].insert_one(rec)      
+
             except aiohttp.ClientResponseError as e:
-                print("--- Wrong response from:{}\n---{}---"\
+                print("-!- Wrong response from:{}\n-!- {}"\
                     .format(response, e.message), file=stderr)
+
     except aiohttp.ClientConnectionError as e:
-        print("--- ConnectionError when sending a request: {} ---"\
-            .format(e), file=stderr)
+        print("-!- ConnectionError for:{}\n-!- {}"\
+            .format(url, e), file=stderr)
+
     except asyncio.TimeoutError as e:
-        print("--- Timeout when sending a request ---", file=stderr)
+        print("-!- Timeout for {}".format(url), file=stderr)
+
     except Exception as e:
-        print("--- Unkown exception when sending a request: {} ---"\
+        print("-!- Unkown exception when sending a request: {}"\
             .format(e), file=stderr)
+
+    stderr.flush()
