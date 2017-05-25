@@ -8,12 +8,20 @@
     <div class="container">
       <div class="panel">
         <div class="panel-body">
-          <ul role="navigation" class="nav nav-pills">
-            <li role="presentation"><a href="/">Home</a></li>
-            <li role="presentation"><a href="/table">Table only</a></li>
-            <li role="presentation"><a href="/graph">Graph only</a></li>
-            <li role="presentation" class="active"><a href="/delete">Delete/Update</a></li>
+          <div class="col-md-6">
+            <ul role="navigation" class="nav nav-pills">
+              <li role="presentation"><a href="/">Home</a></li>
+              <li role="presentation"><a href="/table">Table only</a></li>
+              <li role="presentation"><a href="/graph">Graph only</a></li>
+              <li role="presentation" class="active"><a href="/delete">Delete/Update</a></li>
           </ul>
+          </div>
+          <div class="col-md-6">
+            <ul role="navigation" class="nav nav-pills pull-right">
+              <li role="presentation"><a href="http://github.com/akwodkiewicz"><img class="img-circle" id="git" src="{{ url_for('static', filename='GitHub-Mark-32px.png') }}"/>  Andrzej Wódkiewicz</a>           
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       {% block content %}
