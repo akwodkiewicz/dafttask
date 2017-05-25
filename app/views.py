@@ -45,8 +45,8 @@ def delete():
     correct = -1
     deleted = False
     if request.method == 'POST':
-        # Pressing a button on delete.html page generates a value
-        # inside the 'form' dictionary, under the key=='task'
+        # Pressing a button on '/delete' page generates a value
+        # inside the 'request.form' dictionary, under the key 'task'
         val = request.form.get('task', None)
         if val == 'update':
             (correct, wrong) = update_db()
@@ -57,11 +57,3 @@ def delete():
 
     return render_template('delete.html', wrong=wrong, correct=correct,
                             deleted=deleted)
-
-
-@app.route('/mongo')
-def mongo_debug():
-    rec = mongo.db.usd.find_one({"effectiveDate":date.today()})
-    mongo.db.usd.delete_one(rec)
-    print(rec, file=stderr)
-    return "Check console"

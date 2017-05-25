@@ -1,11 +1,10 @@
-import time
-import requests
 import asyncio
 import aiohttp
 import plotly as pl
 from flask import render_template, request, Response
 from datetime import timedelta, date, datetime
 from sys import stderr
+from time import sleep
 
 from app import app, mongo
 from .models import ( 
@@ -27,7 +26,10 @@ correct_responses_counter = 0
 
 
 def default_action():
-    """Default function called by the main page and 2 subpages"""
+    """
+    Default function called by the main page and 2 subpages
+    Returns all the data necessary to render a page
+    """
     form = CurrencyForm(request.form)
     if request.method == 'GET':
         (start, end, graph, data) = process(form)
@@ -55,8 +57,8 @@ def validate_dates(s, e):
 
 def process_from_previous(form):
     """
-    Returns (start, end, currency) tuple based on previously used values
-    and sets those values inside proper form fields for the user to see
+    Sets (start, end, currency) values basing on previously used values
+    inside the form fields (for the user to see) and returns them 
     """
     global previous
     start = previous.start
@@ -79,19 +81,15 @@ def process(form, invalidated=False):
         currency = form.currency.data
         previous.update(start, end, currency)
 
-    # Find all the docs from defined start 'till the end
+    # Find all the docs from 'start' till the 'end'
     result = mongo.db[currency].find({"$and":[
         {"effectiveDate": { "$gte": start.strftime("%Y-%m-%d") }},
         {"effectiveDate": { "$lte": end.strftime("%Y-%m-%d") }}
         ]}).sort("effectiveDate", -1)
 
     # Prepare data for the table (and for a new graph)
-    dates=[]
-    mids=[]
     data=[]
     for doc in result:
-        dates.append(doc['effectiveDate'])
-        mids.append(doc['mid'])
         data.append(doc)
 
     # Try to find an existing graph for this set of values
@@ -103,25 +101,28 @@ def process(form, invalidated=False):
 
     # If it doesn't exist - make a new one
     if graph_record is None: 
-        graph_record = make_and_get_graph_record(currency, start, end, 
-                                                dates, mids)
-    # If we had previously less data about this period -
+        graph_record = make_and_get_graph_record(currency, start, end, data) 
+    # If we had previously less data about this period,
     # delete the old graph and make a new one
-    elif graph_record["points"] < len(data):
+    elif len(graph_record["data"]) < len(data):
         mongo.db["graphs"].delete_one(graph_record)
-        graph_record = make_and_get_graph_record(currency, start, end, 
-                                                dates, mids)
+        graph_record = make_and_get_graph_record(currency, start, end, data)
+    # Else - the data inside a graph_record is either equal to the data from
+    # [currency] collection or even more detalied
     else:
-        print("--- Using graph from DB", file=stderr, flush=True)
+        data = graph_record["data"]
+        print("--- Using cached graph and data", file=stderr, flush=True)
 
     return (start, end, graph_record["graph"], data)
 
 
-def make_and_get_graph_record(currency, start, end, dates, mids):
+def make_and_get_graph_record(currency, start, end, data):
     """
     Makes a new graph, adds it to the database 
     and returns a whole record (a dictionary)
     """
+    dates = [row['effectiveDate'] for row in data]
+    mids = [row['mids'] for row in data]
     graph_obj = [pl.graph_objs.Scatter(x=dates, y=mids)]
     layout = pl.graph_objs.Layout(
                             title=CURRENCY_DICT[currency],
@@ -138,7 +139,7 @@ def make_and_get_graph_record(currency, start, end, dates, mids):
         "end":end.strftime("%Y-%m-%d"),
         "currency":currency,
         "graph":graph,
-        "points":len(dates)
+        "data":data
         }
     mongo.db['graphs'].insert_one(record)
     return record
@@ -168,8 +169,8 @@ def update_db():
 
 def find_empty_record_dates():
     """
-    Finds all the missing chunks of records in the database
-    and for each currency in CURRENCY_DICT returns its list of 'start dates'.
+    Finds all the missing chunks of records in the database and for each 
+    currency in CURRENCY_DICT returns its list of chunks' start dates.
     Example return:
     empty_record_dates = {
         'usd': [date(2005, 5, 7),
@@ -196,7 +197,7 @@ def find_empty_record_dates():
             if result is None:
                 empty_record_dates[cur].append(current_date)
             current_date += timedelta(days=DELTA+1)
-        # Add current DELTA-long chunk
+        # Add [today-DELTA; today] chunk's start date
         # (we might be missing up to DELTA-1 records)
         empty_record_dates[cur].append(date.today()-timedelta(days=DELTA))
 
@@ -218,15 +219,15 @@ async def prepare_and_start_futures(empty_record_dates):
                     get_from_nbp(session, currency, current_date, end_date)
                 )
             # Added some sleeping to decrease the number of wrong responses
-            # received from the NBP api
-            time.sleep(SLEEP_TIME)
+            # received from the NBP API
+            sleep(SLEEP_TIME)
 
         if len(futures) != 0:
             await asyncio.wait(futures)
                 
 
 async def get_from_nbp(session, currency, start_date, end_date):
-    """Sends one GET request and enters the result into database"""
+    """Sends one GET request and inserts the response into database"""
     global wrong_responses_counter, correct_responses_counter
     url = URL.format(
         table=TABLE_TYPE,
@@ -262,6 +263,7 @@ async def get_from_nbp(session, currency, start_date, end_date):
         print("-!- Timeout for {}".format(url), file=stderr)
 
     except Exception as e:
+        wrong_responses_counter += 1
         print("-!- Unkown exception when sending a request: {}"\
             .format(e), file=stderr)
 

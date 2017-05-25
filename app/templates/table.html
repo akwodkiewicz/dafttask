@@ -9,19 +9,17 @@
 
 
 {% block content %}
-
-    {% if data is not none %}
-    <div class="col-md-4 col-md-offset-4" id="tablediv">
-      <table class="table table-striped table-bordered">
-        <tr><th>Date</th><th>{{ cur }}</th></tr>
-        {% for row in data %}
-        <tr>
-          <td>{{ row['effectiveDate'] }}</td>
-          <td>{{ row['mid'] }}</td>
-        </tr>
-        {% endfor %}
-      </table>
-    </div>
-    {% endif %}
-
+{% if data is not none %}
+<div class="col-md-4 col-md-offset-4" id="tablediv">
+  <table class="table table-striped table-bordered">
+    <tr><th>Date</th><th>{{ cur }}</th></tr>
+    {% for row in data %}
+    <tr>
+      <td>{{ row['effectiveDate'] }}</td>
+      <td>{{ row['mid'] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
 {% endblock %}

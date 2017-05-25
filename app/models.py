@@ -26,11 +26,15 @@ CURRENCY_DICT = {
 CURRENCY_LIST = [(k, v) for (k,v) in CURRENCY_DICT.items()]
 SLEEP_TIME = 1
 
+
 class CurrencyForm(FlaskForm):
     currency = SelectField('Currency', choices=CURRENCY_LIST)
-    from_date = DateField('Start Date', format='%Y-%m-%d', validators=(validators.Optional(),))
-    to_date = DateField('End Date', format='%Y-%m-%d', validators=(validators.Optional(),))
+    from_date = DateField('Start Date', format='%Y-%m-%d', 
+        validators=(validators.Optional(),))
+    to_date = DateField('End Date', format='%Y-%m-%d', 
+        validators=(validators.Optional(),))
     #submit = SubmitField('Submit')
+
 
 class Previous(object):
     def __init__(self, start, end, currency):

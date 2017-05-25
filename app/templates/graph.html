@@ -9,12 +9,11 @@
 
 
 {% block content %}
-    <div class="panel panel-default col-md-12">
-      <div class=" panel-body" id="graph">
-        {% if graph is not none %}
-        {{ graph|safe }}
-        {% endif %}
-      </div>
-    </div>
-
+<div class="panel panel-default col-md-12">
+  <div class=" panel-body" id="graph">
+    {% if graph is not none %}
+    {{ graph|safe }}
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
