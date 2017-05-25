@@ -101,7 +101,8 @@ def process(form, invalidated=False):
 
     #If it doesn't exist - make a new one
     if graph_record is None: 
-        graph_record = make_and_get_graph_record(currency, start, end, dates, mids)
+        graph_record = make_and_get_graph_record(currency, start, end, 
+                                                dates, mids)
     #If we had previously less data about this period (possibly due to errors),
     #delete the old graph and make a new one
     elif graph_record["points"] < len(data):
@@ -158,7 +159,7 @@ def update_db():
         wrong_responses_counter
         ), file=stderr
     )
-    #loop.close()
+    loop.close()
 
 
 def find_empty_record_dates():
@@ -250,4 +251,3 @@ async def get_from_nbp(session, currency, start_date, end_date):
     except Exception as e:
         print("--- Unkown exception when sending a request: {} ---"\
             .format(e), file=stderr)
-
