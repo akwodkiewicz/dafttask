@@ -22,7 +22,7 @@ from .models import (
 ### Global mutable objects
 previous = Previous(date.today() - timedelta(days=7), date.today(), 'usd')
 wrong_responses_counter = 0
-correct_responses_counter = 0
+inserted_records_counter = 0
 
 
 def default_action():
@@ -148,23 +148,24 @@ def make_and_get_graph_record(currency, start, end, data):
 def update_db():
     """
     Updates the database with all the missing records 
-    using asyncio event loop.
+    using asyncio event loop. 
+    Returns no. of inserted records and wrong responses
     """
-    global wrong_responses_counter, correct_responses_counter
+    global wrong_responses_counter, inserted_records_counter
     wrong_responses_counter = 0
-    correct_responses_counter = 0
+    inserted_records_counter = 0
 
     empty_record_dates = find_empty_record_dates()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(prepare_and_start_futures(empty_record_dates))
-    print("--- Correct responses: {}\n--- Wrong responses: {}".format(
-        correct_responses_counter,
+    print("--- Inserted records: {}\n--- Wrong responses: {}".format(
+        inserted_records_counter,
         wrong_responses_counter
         ), file=stderr, flush=True
     )
     loop.close()
-    return (correct_responses_counter, wrong_responses_counter)
+    return (inserted_records_counter, wrong_responses_counter)
 
 
 def find_empty_record_dates():
@@ -228,7 +229,7 @@ async def prepare_and_start_futures(empty_record_dates):
 
 async def get_from_nbp(session, currency, start_date, end_date):
     """Sends one GET request and inserts the response into database"""
-    global wrong_responses_counter, correct_responses_counter
+    global wrong_responses_counter, inserted_records_counter
     url = URL.format(
         table=TABLE_TYPE,
         code=currency,
@@ -246,7 +247,7 @@ async def get_from_nbp(session, currency, start_date, end_date):
                 for rec in record_list:
                     if mongo.db[currency].find_one(rec) is None:
                         mongo.db[currency].insert_one(rec)      
-                correct_responses_counter += 1
+                        inserted_records_counter += 1
 
             except aiohttp.ClientResponseError as e:
                 wrong_responses_counter += 1
