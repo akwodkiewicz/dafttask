@@ -182,7 +182,7 @@ def find_empty_record_dates():
                 date.today()-timedelta(days=DELTA)],
         'jpy': [date(2007, 12, 3)],
                 date.today()-timedelta(days=DELTA)],
-        'chf': [date.today()-timedelta(days=DELTA)],
+        'chf': [],
         ... etc. ...
     }
     """
@@ -191,7 +191,7 @@ def find_empty_record_dates():
         empty_record_dates[cur] = []
         current_date = START_DATE
         # Find all the DELTA-long chunks 
-        while current_date < END_DATE:
+        while current_date <= END_DATE:
             end_date = current_date+timedelta(days=DELTA)
             result = mongo.db[cur].find_one({"$and":[
                 {"effectiveDate":{"$gte": current_date.strftime("%Y-%m-%d")}},
@@ -200,10 +200,6 @@ def find_empty_record_dates():
             if result is None:
                 empty_record_dates[cur].append(current_date)
             current_date += timedelta(days=DELTA+1)
-        # Add [today-DELTA; today] chunk's start date
-        # (we might be missing up to DELTA-1 records)
-        empty_record_dates[cur].append(date.today()-timedelta(days=DELTA))
-
     return empty_record_dates
 
 
