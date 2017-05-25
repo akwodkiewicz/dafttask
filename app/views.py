@@ -7,6 +7,7 @@ from sys import stderr
 
 
 from app import app, mongo
+from .models import CURRENCY_DICT
 from .logic import (
     update_db, 
     default_action, 
@@ -18,21 +19,24 @@ from .logic import (
 def index():
     (start, end, graph, data, form) = default_action()
     return render_template('home.html', form=form, graph=graph, 
-                            data=data, start=start, end=end)
+                            data=data, start=start, end=end,
+                            cur=CURRENCY_DICT[form.currency.data])
 
 
 @app.route('/table', methods=['GET', 'POST'])
 def table():
     (start, end, graph, data, form) = default_action()
     return render_template('table.html', form=form, data=data, 
-                            start=start, end=end)
+                            start=start, end=end,
+                            cur=CURRENCY_DICT[form.currency.data])
 
 
 @app.route('/graph', methods=['GET', 'POST'])
 def graph():
     (start, end, graph, data, form) = default_action()
     return render_template('graph.html', form=form, graph=graph,
-                            start=start, end=end)
+                            start=start, end=end,
+                            cur=CURRENCY_DICT[form.currency.data])
 
 
 @app.route('/delete', methods=['GET', 'POST'])

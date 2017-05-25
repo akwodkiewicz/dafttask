@@ -127,9 +127,11 @@ def make_and_get_graph_record(currency, start, end, dates, mids):
                             title=CURRENCY_DICT[currency],
                             xaxis={"title":"Date"},
                             yaxis={"title":"Exchange rate"},
-                            height=600
+                            height=580,
+                            paper_bgcolor='rgba(0,0,0,0)',
+                            plot_bgcolor='rgba(0,0,0,0)'
                             )
-    graph = pl.offline.plot({"data":graph_obj, "layout":layout},
+    graph = pl.offline.plot({"data":graph_obj, "layout":layout}, 
                             output_type="div")
     record = {
         "start":start.strftime("%Y-%m-%d"),

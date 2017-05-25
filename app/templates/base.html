@@ -19,11 +19,34 @@
   <body>
     <div class="container">
       <div class="panel">
-      <div class="panel-body">
-      <ul class="nav nav-pills">
-      {% block navigation %}{% endblock %}
-      </ul>
+        <div class="panel-body">
+          <ul role="navigation" class="nav nav-pills">
+            {% block navigation %}{% endblock %}
+          </ul>
+        </div>
       </div>
+      <div class="panel">
+        <div class="panel-body">
+          <div class="col-md-9">
+            <h1>Welcome to <i>The DaftCode Internship Project</i></h1>
+            <h3>Pick a link from the navigation bar or type in your data on the right</h3>
+          </div>
+          <div class="col-md-3">
+            <form role="form" method="POST">
+              <br/>
+              {{ form.hidden_tag() }}
+              {{ render_field(form.currency) }}
+              {% if start is none %}
+                {{ render_field(form.from_date) }}
+                {{ render_field(form.to_date) }}
+              {% else %}
+                {{ render_field(form.from_date, value=start) }}
+                {{ render_field(form.to_date, value=end) }}
+              {% endif %}
+              <button class="btn btn-default" type="submit">Submit</button>
+            </form>
+          </div>
+        </div>
       </div>
       {% block content %}{% endblock %}
     </div>
