@@ -1,4 +1,4 @@
-# DaftCode recruitment task (Python, Evox)
+# NBP Exchange Rates
 
 This is a Flask web application that presents exchange rates of 5 currency pairs: 
 - USD/PLN
